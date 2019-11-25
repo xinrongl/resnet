@@ -27,6 +27,11 @@ python main.py --data_url '../datasets/train_val' --train_url '../model_snapshot
 cd {main.py所在目录}
 python main.py --data_url '../datasets/train_val' --train_url '../model_snapshots' --arch 'resnet50' --num_classes 54 --seed 0 --eval_pth '../model_snapshots/epoch_5_8.4.pth'
 """
+import os
+os.system('pip install albumentations')
+os.system('pip install --upgrade torch==1.2.0')
+os.system('pip install --upgrade torchvision==0.4.0')
+
 from albumentations.augmentations.transforms import Resize, CenterCrop
 from prepare_data import prepare_data_on_modelarts
 from albumentations.augmentations.functional import brightness_contrast_adjust, elastic_transform
@@ -48,15 +53,12 @@ import torch.nn as nn
 from torch.nn.parameter import Parameter
 import torch
 import argparse
-import os
 from pathlib import Path
 import random
 import shutil
 import time
 import warnings
-os.system('pip install albumentations')
-os.system('pip install --upgrade torch==1.2.0')
-os.system('pip install --upgrade torchvision==0.4.0')
+
 try:
     import moxing as mox
 except:
