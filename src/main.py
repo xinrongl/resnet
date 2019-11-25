@@ -211,8 +211,8 @@ def main_worker(gpu, ngpus_per_node, args):
             print('use exist pre-trained model at: %s' %
                   (os.path.abspath('/home/work/.cache/torch/checkpoints/resnext101_32x8d-8ba56ff5.pth')))
         # model = models.__dict__[args.arch](pretrained=True)
-        model = models.resnext101_32x8d(pretrained=True)
-        # model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x8d_wsl')
+        # model = models.resnext101_32x8d(pretrained=True)
+        model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x8d_wsl') # download resnext from facebook repos
     else:
         print("=> creating model '{}'".format(args.arch))
         model = torch.hub.load(
