@@ -45,6 +45,7 @@ import torch.distributed as dist
 import torch.backends.cudnn as cudnn
 import torch.nn.parallel
 import torch.nn as nn
+from torch.nn.parameter import Parameter
 import torch
 import argparse
 import os
@@ -216,10 +217,23 @@ def main_worker(gpu, ngpus_per_node, args):
         print("=> creating model '{}'".format(args.arch))
         model = torch.hub.load(
             'facebookresearch/WSL-Images', 'resnext101_32x8d_wsl')
+    
+    class GeM(nn.Module):
+        def __init__(self, p=3, eps=1e-6):
+            super(GeM, self).__init__()
+            self.p = Parameter(torch.ones(1) * p)
+            self.eps = eps
 
+        def forward(self, x):
+            return gem(x, p=self.p, eps=self.eps)
+
+        def __repr__(self):
+            return self.__class__.__name__ + '(' + 'p=' + '{:.4f}'.format(self.p.data.tolist()[0]) + ', ' + 'eps=' + str(self.eps) + ')'
+    
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, args.num_classes)
-
+    model.avg_pool = GeM()
+    
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
         # should always set the single device scope, otherwise,
@@ -295,7 +309,7 @@ def main_worker(gpu, ngpus_per_node, args):
     cudnn.benchmark = True
 
     # Data loading code
-    class TorchDatasetA(Dataset):
+    class TorchDataset(Dataset):
         '''Using albumentations for image transformations'''
 
         def __init__(self, data_dir, mode):
@@ -340,8 +354,8 @@ def main_worker(gpu, ngpus_per_node, args):
     traindir = os.path.join(args.data_local, 'train')
     valdir = os.path.join(args.data_local, 'val')
 
-    train_dataset = TorchDatasetA(data_dir=traindir, mode='train')
-    val_dataset = TorchDatasetA(data_dir=valdir, mode='val')
+    train_dataset = TorchDataset(data_dir=traindir, mode='train')
+    val_dataset = TorchDataset(data_dir=valdir, mode='val')
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(
